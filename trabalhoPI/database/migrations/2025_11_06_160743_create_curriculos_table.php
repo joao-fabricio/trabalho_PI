@@ -12,7 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('curriculos', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_curriculo');
+            $table->unsignedBigInteger('id_candidato');
+            $table->foreign('id_candidato')->references('id_candidato')->on('candidatos')->onDelete('cascade');
+            $table->text('formacao')->nullable();
+            $table->text('experiencias')->nullable();
+            $table->text('competencias')->nullable();
+            $table->text('idiomas')->nullable();
+            $table->text('resumo_profissional')->nullable();
+            $table->timestamp('data_atualizacao')->useCurrent();
             $table->timestamps();
         });
     }

@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('metricas', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_metrica');
+            $table->string('tipo');
+            $table->decimal('valor', 10, 2)->default(0);
+            $table->timestamp('data_registro')->useCurrent();
             $table->timestamps();
         });
     }

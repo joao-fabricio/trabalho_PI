@@ -12,7 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('avaliacoes', function (Blueprint $table) {
-            $table->id();
+            $table->id('id_avaliacao');
+
+            $table->unsignedBigInteger('id_usuario');
+            $table->foreign('id_usuario')->references('id_usuario')->on('usuarios')->onDelete('cascade');
+
+            $table->unsignedBigInteger('id_prestador');
+            $table->foreign('id_prestador')->references('id_prestador')->on('prestadores')->onDelete('cascade');
+
+            $table->unsignedTinyInteger('nota')->default(0);
+            $table->text('comentario')->nullable();
+            $table->timestamp('data_avaliacao')->useCurrent();
+            
             $table->timestamps();
         });
     }
