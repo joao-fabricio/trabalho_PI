@@ -4,39 +4,60 @@ namespace App\Http\Controllers;
 
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Mostra a lista de usuários apenas para admin.
      */
     public function index()
     {
-        //
+        if (Auth::user()->tipo !== 'admin') {
+            return redirect()->route('home')->with('error', 'Acesso negado.');
+        }
+
+        $usuarios = Usuario::all();
+        return view('usuarios.index', compact('usuarios'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Mostra formulário de criação de novo usuário.
      */
     public function create()
     {
-        //
+        return view('usuarios.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Salva o novo usuário no banco.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:150',
+            'email' => 'required|string|email|max:150|unique:usuarios',
+            'password' => 'required|string|min:8|confirmed',
+            'tipo' => 'required|in:candidato,empresa,prestador,admin',
+        ]);
+
+        Usuario::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'tipo' => $request->tipo,
+        ]);
+
+        return redirect()->route('usuarios.index')->with('success', 'Usuário criado com sucesso.');
     }
 
     /**
-     * Display the specified resource.
+     * Perfil do usuário logado.
      */
     public function show(Usuario $usuario)
     {
-        //
+        return view('usuarios.show', compact('usuario'));
     }
 
     /**

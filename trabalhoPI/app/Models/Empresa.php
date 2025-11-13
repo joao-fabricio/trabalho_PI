@@ -17,6 +17,7 @@ class Empresa extends Model
         'id_usuario', 
         'razao_socia',
         'nome_fantasia',
+        'endereco',
         'site',
     ];
 

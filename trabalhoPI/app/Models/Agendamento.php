@@ -16,7 +16,7 @@ class Agendamento extends Model
     protected $fillable = [
         'id_usuario',
         'id_servico',
-        'data_agendamento',
+        'data_agendada',
         'observacoes',
         'status',
     ];

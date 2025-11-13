@@ -19,7 +19,30 @@ class Prestador extends Model
         'descricao', 
         'preco_base', 
         'cidade',
-        //se lembrar de por ativo ou inativo
-        //já está especificado no usuário
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
+    }
+
+    public function servicos()
+    {
+        return $this->hasMany(Metrica::class, 'id_prestador', 'id_prestador');
+    }
+
+    public function agendamentos()
+    {
+        return $this->hasMany(Agendamento::class, 'id_prestador', 'id_prestador');
+    }
+
+    public function avaliacoes()
+    {
+        return $this->hasMany(Avaliacao::class, 'id_prestador', 'id_prestador');
+    }
+
+    public function metricas()
+    {
+        return $this->hasMany(Metrica::class, 'entidade', 'id_prestador');
+    }
 }

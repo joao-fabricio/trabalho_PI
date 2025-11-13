@@ -27,6 +27,11 @@ class Usuario extends Model
         return $this->hasOne(Empresa::class, 'id_usuario', 'id_usuario');
     }
 
+    public function prestador()
+    {
+        return $this->hasOne(Prestador::class, 'id_usuario', 'id_usuario');
+    }
+
     public function candidato()
     {
         return $this->hasOne(Candidato::class, 'id_usuario', 'id_usuario');

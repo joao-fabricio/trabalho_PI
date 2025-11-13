@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('metricas', function (Blueprint $table) {
             $table->id('id_metrica');
-            $table->string('tipo');
+            $table->string('entidade');
+            $table->string('tipo')->nullable();
             $table->decimal('valor', 10, 2)->default(0);
+            $table->date('referencia')->nullable();
             $table->timestamp('data_registro')->useCurrent();
             $table->timestamps();
         });//precisa ajustar 

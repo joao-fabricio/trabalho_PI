@@ -18,8 +18,8 @@ class Vaga extends Model
         'titulo',
         'descricao',
         'requisitos',
-        'localidade',
         'salario',
+        'localidade',
         'status',
     ];
 
