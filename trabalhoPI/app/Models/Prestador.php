@@ -20,5 +20,6 @@ class Prestador extends Model
         'preco_base', 
         'cidade',
         //se lembrar de por ativo ou inativo
+        //já está especificado no usuário
     ];
 }

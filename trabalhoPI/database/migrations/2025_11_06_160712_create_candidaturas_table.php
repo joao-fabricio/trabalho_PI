@@ -18,8 +18,6 @@ return new class extends Migration
             $table->unsignedBigInteger('id_vaga');
             $table->foreign('id_vaga')->references('id_vaga')->on('vagas')->onDelete('cascade');
             $table->timestamp('data_candidatura')->useCurrent();
-            $table->unsignedBigInteger('id_prestador');
-            $table->foreign('id_prestador')->references('id_prestador')->on('prestadores')->onDelete('cascade');
             $table->enum('status', ['pendente', 'aceita', 'rejeitada'])->default('pendente');
             $table->timestamps();
         });

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('valor', 10, 2)->default(0);
             $table->timestamp('data_registro')->useCurrent();
             $table->timestamps();
-        });
+        });//precisa ajustar 
     }
 
     /**
