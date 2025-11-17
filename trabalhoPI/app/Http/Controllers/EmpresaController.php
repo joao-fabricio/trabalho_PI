@@ -4,35 +4,51 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EmpresaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listar empresas (somente usuário logado).
      */
     public function index()
     {
-        //
+        $empresas = Empresa::where('id_usuario', Auth::id())->get(); return view('empresas.index', compact('empresas'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Formulário de criação.
      */
     public function create()
     {
-        //
+        return view('empresas.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Salvar nova empresa.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'razao_social' => 'required|string|max:150',
+            'nome_fantasia' => 'required|string|max:150',
+            'endereco' => 'nullable|string|max:255',
+            'site' => 'nullable|url|max:150',
+        ]);
+
+        Empresa::create([
+            'id_usuario' => Auth::id(),
+            'razao_social' => $request->razao_social,
+            'nome_fantasia' => $request->nome_fantasia,
+            'endereco' => $request->endereco,
+            'site' => $request->site,
+        ]);
+        
+        return redirect()->route('empresas.index')->with('success', 'Empresa criada com sucesso.');
     }
 
     /**
-     * Display the specified resource.
+     * Exibir uma empresa.
      */
     public function show(Empresa $empresa)
     {

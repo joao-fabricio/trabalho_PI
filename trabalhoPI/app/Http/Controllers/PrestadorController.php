@@ -4,62 +4,108 @@ namespace App\Http\Controllers;
 
 use App\Models\Prestador;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PrestadorController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listar todos os prestadores (para quem for contratar).
      */
     public function index()
     {
-        //
+        //apenas com usuário ativo
+        $prestadores = prestador::with('usuario')->get();
+
+        //pesquisar paginate10 pra por no lugar de get
+        return view('prestadores.index', compact('prestadores'));
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Mostra o formulário pro usuário virar prestador.
      */
     public function create()
     {
-        //
+        return view('prestadores.create');
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Salvar o prestador no banco.
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'especialidade' => 'required|string|max:100',
+            'descricao' => 'nullable|string',
+            'preco_base' => 'required|numeric|min:0',
+            'cidade' => 'required|string|max:10',
+        ]);
+
+        Prestador::create([
+            'id_usuario' => Auth::id(),
+            'especialidade' => $request->especialidade,
+            'descricao' => $request->descricao,
+            'preco_base' => $request->preco_base,
+            'cidade' => $request->cidade,
+        ]);
+        
+        return redirect()->route('prestadores.index')->with('success', 'Você agora é um prestador de serviços!');
+    }
+
+    public function meusDados()
+    {
+        $prestador = Prestador::where('id_usuario', Auth::id())->firstOrFail();
+        return view('prestadores.meus_dados', compact('prestador'));
     }
 
     /**
-     * Display the specified resource.
+     * Mostra um perfil de um prestador específico.
      */
     public function show(Prestador $prestador)
     {
-        //
+        $prestador->load(['usuario', 'avaliacoes', 'agendamentos']);
+        return view('prestadores.show', compact('prestador'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Formulário de edição do prestador logado.
      */
     public function edit(Prestador $prestador)
     {
-        //
+        $prestador = Prestador::where('id_usuario', Auth::id())->firstOrFail();
+        return view('prestadores.edit', compact('prestador'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Atualizar dados.
      */
-    public function update(Request $request, Prestador $prestador)
+    public function update(Request $request)
     {
-        //
+        $prestador  = Prestador::where('id_usuario', Auth::id())->firstOrFail();
+
+        $request->validate([
+            'especialidade' => 'required|string|max:100',
+            'descricao' => 'nullable|string',
+            'preco_base' => 'required|numeric|min:0',
+            'cidade' => 'required|string|max:10',
+        ]);
+
+        $prestador->update([
+            'especialidade' => $request->especialidade,
+            'descricao' => $request->descricao,
+            'preco_base' => $request->preco_base,
+            'cidade' => $request->cidade,
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Apagar perfil.
      */
     public function destroy(Prestador $prestador)
     {
-        //
+        $prestador = Prestador::where('id_usuario', Auth::id())->firstOrFail();
+        
+        $prestador->delete();
+
+        return redirect()->route('home')->with('success', 'Seu perfil de prestador foi removido.');
     }
 }

@@ -40,9 +40,4 @@ class Prestador extends Model
     {
         return $this->hasMany(Avaliacao::class, 'id_prestador', 'id_prestador');
     }
-
-    public function metricas()
-    {
-        return $this->hasMany(Metrica::class, 'entidade', 'id_prestador');
-    }
 }

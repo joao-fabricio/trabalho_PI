@@ -36,16 +36,16 @@ class UsuarioController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:150',
-            'email' => 'required|string|email|max:150|unique:usuarios',
-            'password' => 'required|string|min:8|confirmed',
+            'nome' => 'required|string|max:150',
+            'email' => 'required|email|max:150|unique:usuarios,email',
+            'senha' => 'required|string|min:8|confirmed',
             'tipo' => 'required|in:candidato,empresa,prestador,admin',
         ]);
 
         Usuario::create([
-            'name' => $request->name,
+            'nome' => $request->nome,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'senha' => Hash::make($request->senha),
             'tipo' => $request->tipo,
         ]);
 
@@ -55,32 +55,65 @@ class UsuarioController extends Controller
     /**
      * Perfil do usuário logado.
      */
-    public function show(Usuario $usuario)
+
+    public function perfil()
     {
-        return view('usuarios.show', compact('usuario'));
+        $usuario = Auth::user();
+        return view('usuarios.perfil', compact('usuario'));
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Formulário de edição do próprio usuário logado.
      */
-    public function edit(Usuario $usuario)
+    public function edit()
     {
-        //
+        $usuario = Auth::user();
+        return view('usuarios.edit', compact('usuario'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Atualiza os dados do usuário logado.
      */
-    public function update(Request $request, Usuario $usuario)
+    public function update(Request $request)
     {
-        //
+        $usuario = Auth::user();
+
+        $request->validate([
+
+            'nome' => 'required|string|max:150',
+            'email' => 'required|email|max:150|unique:usuarios,email,' . $usuario->id_usuario . ',id_usuario',
+            'senha' => 'nullable|string|min:8|confirmed',
+            
+        ]);
+
+        $usuario = Usuario::findOrFail(Auth::id());
+        $usuario->nome = $request->nome;
+        $usuario->email = $request->email;
+
+        if ($request->senha) {
+            $usuario->senha = Hash::make($request->senha);
+        }
+
+        $usuario->save();
+
+        //erro no save, se liga
+        return redirect()->route('usuarios.perfil')->with('success', 'Perfil atualizado com sucesso.');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Desativar conta.
      */
-    public function destroy(Usuario $usuario)
+    public function destroy($id_usuario)
     {
-        //
+        $usuario = Usuario::findOrFail($id_usuario);
+
+        if(Auth::id() != $id_usuario && Auth::user()->tipo !== 'admin') {
+            return response()->json(['message' => 'Acesso negado.'], 400);
+        }
+
+        $usuario->ativo = false;
+        $usuario->save();
+
+        return response()->json(['message' => 'Conta desativada com sucesso.']);
     }
 }

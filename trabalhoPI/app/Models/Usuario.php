@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Usuario extends Model
+class Usuario extends Authenticatable
 {
     use HasFactory;
 
@@ -21,6 +21,12 @@ class Usuario extends Model
         'tipo',
         'ativo',
     ];
+
+    public function getAuthPassword()
+    {
+        return $this->senha;
+    }
+    //colocar admin
 
     public function empresa()
     {
@@ -68,4 +74,8 @@ class Usuario extends Model
         return $this->hasOne(Curriculo::class, 'id_candidato', 'id_usuario');
     }
     
+    public function admins()
+    {
+        return $this->hasOne(Admin::class, 'id_usuario', 'id_usuario');
+    }
 }
