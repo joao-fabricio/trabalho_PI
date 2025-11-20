@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('titulo');
             $table->text('descricao');
             $table->decimal('preco', 10, 2);
-            $table->string('cateoria');
+            $table->string('categoria');
             $table->string('localidade')->nullable();
             $table->timestamps();
         });

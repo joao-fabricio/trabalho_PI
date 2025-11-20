@@ -28,7 +28,7 @@ class Agendamento extends Model
 
     public function prestador()
     {
-        return $this->belongsTo(Prestador::class, 'id_prestador', 'id_prestador');
+        return $this->servico->prestador();
     }
 
     public function servico()

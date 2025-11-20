@@ -25,7 +25,7 @@ class PrestadorController extends Controller
      */
     public function create()
     {
-        return view('prestadores.create');
+        return view ('prestadores.create');
     }
 
     /**
