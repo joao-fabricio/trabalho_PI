@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 class CandidaturaController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Lista todas as candidaturas.
      */
     public function index()
     {
-        //
+        $candidaturas = Candidatura::with(['candidato', 'vaga'])->get();
+
+        return response()->json($candidaturas, 200);
     }
 
     /**
@@ -24,19 +26,46 @@ class CandidaturaController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Criar nova candidatura.
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'id_candidato' => 'required|exists:candidatos,id_candidato',
+            'id_vaga' => 'required|exists:vagas,id_vaga',
+        ]);
+
+        // verificar se o candidato já se candidatou à vaga
+        $jaExiste = Candidatura::where('id_candidato', $request->id_candidato)
+            ->where('id_vaga', $request->id_vaga)
+            ->first();
+
+        if ($jaExiste) {
+            return response()->json([
+                'message' => 'Candidato já se candidatou a esta vaga.'
+            ], 409);
+        }    
+
+        $candidatura = Candidatura::create([
+            'id_candidato' => $request->id_candidato,
+            'id_vaga' => $request->id_vaga,
+            'status' => 'pendente',
+        ]);
+
+        return response()->json([
+            'message' => 'Candidatura enviada com sucesso',
+            'candidatura' => $candidatura
+        ], 201);
     }
 
     /**
-     * Display the specified resource.
+     * Mostrar candidatura específica.
      */
-    public function show(Candidatura $candidatura)
+    public function show($id)
     {
-        //
+        $candidatura = Candidatura::with(['candidato', 'vaga'])->findOrFail($id);
+
+        return response()->json($candidatura, 200);
     }
 
     /**
@@ -48,18 +77,37 @@ class CandidaturaController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Atualiza status da candidatura.
      */
-    public function update(Request $request, Candidatura $candidatura)
+    public function update(Request $request, $id)
     {
-        //
+        $validated = $request->validate([
+            'status' => 'required|in:pendente,aceito,rejeitado',
+        ]);
+
+        $candidatura = Candidatura::findOrFail($id);
+
+        $candidatura->update([
+            'status' => $request['status']
+        ]);
+
+        return response()->json([
+            'message' => 'Status da candidatura atualizada com sucesso',
+            'candidatura' => $candidatura
+        ], 200);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Exluir candidatura.
      */
-    public function destroy(Candidatura $candidatura)
+    public function destroy($id)
     {
-        //
+        $candidatura = Candidatura::findOrFail($id);
+
+        $candidatura->delete();
+
+        return response()->json([
+            'message' => 'Candidatura removida com sucesso'
+        ], 200);
     }
 }

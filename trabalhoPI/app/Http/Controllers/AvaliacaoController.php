@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 class AvaliacaoController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Listar todas as avaliações.
      */
     public function index()
     {
-        //
+        $avaliacoes = Avaliacao::with(['usuario', 'servico'])->get();
+
+        return response()->json($avaliacoes, 200);
     }
 
     /**
@@ -24,19 +26,36 @@ class AvaliacaoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Criar nova avaliação.
      */
     public function store(Request $request)
     {
-        //
+        // Valida os dados antes de salvar
+        $validated = $request->validate([
+            'id_usuario' => 'required|exists:usuarios,id_usuario',
+            'id_prestador' => 'required|exists:prestadores,is_prestador',
+            'nota' => 'required|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:1000',
+        ]);
+
+        //observar se é comentario msm
+
+        $avaliacao = Avaliacao::create($validated);
+
+        return response()->json([
+            'message' => 'Avaliação registrada com sucesso',
+            'avaliacao' => $avaliacao
+        ], 201);
     }
 
     /**
-     * Display the specified resource.
+     * Mostrar avaliação específica.
      */
-    public function show(Avaliacao $avaliacao)
+    public function show($id)
     {
-        //
+        $avaliacao = Avaliacao::with(['usuario', 'prestador'])->findOrFail($id);
+
+        return response()->json($avaliacao, 200);
     }
 
     /**
@@ -48,18 +67,37 @@ class AvaliacaoController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Atualizar avaliação.
      */
-    public function update(Request $request, Avaliacao $avaliacao)
+    public function update(Request $request, $id)
     {
-        //
+        $avaliacao = Avaliacao::findOrFail($id);
+
+        $validated = $request->validate([
+            'nota' => 'nullable|integer|min:1|max:5',
+            'comentario' => 'nullable|string|max:1000',
+        ]);
+
+        $avaliacao->update($validated);
+
+        return response()->json([
+            'message' => 'Avaliação atualizada com sucesso',
+            'avaliacao' => $avaliacao
+        ], 200);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Excluir avaliação.
      */
-    public function destroy(Avaliacao $avaliacao)
+    public function destroy($id)
     {
-        //
+        $avaliacao = Avaliacao::findOrFail($id);
+
+        $avaliacao->delete();
+
+        return response()->json([
+            'message' => 'Avaliação removida com sucesso'
+        ], 200);
     }
+    //padronizar mensagens de exclusão e do json
 }

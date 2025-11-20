@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('admins', function (Blueprint $table) {
             $table->id('id_admin');
+
             $table->unsignedBigInteger('id_usuario');
             $table->foreign('id_usuario')->references('id_usuario')->on('usuarios')->onDelete('cascade');
             $table->string('cargo')->default('Administrador');
             $table->timestamp('ultimo_login')->nullable();
-
+            $table->string('ip_ultimo_login')->nullable();
+            $table->integer('login_count')->default(0);
+            
             $table->timestamps();
         });
     }
