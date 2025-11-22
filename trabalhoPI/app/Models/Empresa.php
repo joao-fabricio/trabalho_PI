@@ -30,9 +30,4 @@ class Empresa extends Model
     {
         return $this->hasMany(Vaga::class, 'id_empresa', 'id_empresa');
     }
-
-    public function metricas()
-    {
-        return $this->hasMany(Metrica::class, 'id_usuario', 'id_usuario');
-    }
 }

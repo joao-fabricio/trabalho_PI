@@ -83,7 +83,7 @@ class EmpresaController extends Controller
     /**
      * Atualizar empresa.
      */
-    public function update(Request $request, Empresa $empresa)
+    public function update(Request $request, $id_empresa)
     {
         $request->validate([
             'razao_social' => 'required|string|max:150',
@@ -92,7 +92,7 @@ class EmpresaController extends Controller
             'site' => 'nullable|url|max:150',
         ]);
 
-        $empresa = Empresa::where('id_empresa', $empresa->id_empresa)
+        $empresa = Empresa::where('id_empresa', $id_empresa)
             ->where('id_usuario', Auth::id())
             ->firstOrFail();
 
@@ -109,9 +109,9 @@ class EmpresaController extends Controller
     /**
      * Excluir.
      */
-    public function destroy(Empresa $empresa)
+    public function destroy($id_empresa)
     {
-        $empresa = Empresa::findOrFail($empresa);
+        $empresa = Empresa::findOrFail($id_empresa);
 
         //APENAS DONO OU ADMIN PODEM DELETAR
         if(Auth::id() != $empresa->id_usuario && Auth::user()->tipo !== 'admin'){

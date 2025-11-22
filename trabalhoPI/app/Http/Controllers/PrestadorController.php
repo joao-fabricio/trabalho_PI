@@ -14,7 +14,7 @@ class PrestadorController extends Controller
     public function index()
     {
         //apenas com usuário ativo
-        $prestadores = prestador::with('usuario')->get();
+        $prestadores = Prestador::with('usuario')->get();
 
         //pesquisar paginate10 pra por no lugar de get
         return view('prestadores.index', compact('prestadores'));
@@ -37,7 +37,7 @@ class PrestadorController extends Controller
             'especialidade' => 'required|string|max:100',
             'descricao' => 'nullable|string',
             'preco_base' => 'required|numeric|min:0',
-            'cidade' => 'required|string|max:10',
+            'cidade' => 'required|string|max:100',
         ]);
 
         Prestador::create([
@@ -69,7 +69,7 @@ class PrestadorController extends Controller
     /**
      * Formulário de edição do prestador logado.
      */
-    public function edit(Prestador $prestador)
+    public function edit($id_prestador)
     {
         $prestador = Prestador::where('id_usuario', Auth::id())->firstOrFail();
         return view('prestadores.edit', compact('prestador'));
@@ -95,12 +95,14 @@ class PrestadorController extends Controller
             'preco_base' => $request->preco_base,
             'cidade' => $request->cidade,
         ]);
+
+        return redirect()->route('prestadores.meusDados')->with('success', 'Seus dados foram atualizados com sucesso.');
     }
 
     /**
      * Apagar perfil.
      */
-    public function destroy(Prestador $prestador)
+    public function destroy()
     {
         $prestador = Prestador::where('id_usuario', Auth::id())->firstOrFail();
         

@@ -42,11 +42,6 @@ class Usuario extends Authenticatable
     {
         return $this->hasOne(Candidato::class, 'id_usuario', 'id_usuario');
     }
-    public function vagasCandidatadas()
-    {
-        return $this->belongsToMany(Vaga::class, 'candidaturas', 'id_candidato', 'id_vaga')
-                    ->withPivot('data_candidatura', 'status');
-    }
 
     public function agendamentos()
     {
@@ -59,23 +54,9 @@ class Usuario extends Authenticatable
         return $this->hasMany(Avaliacao::class, 'id_usuario', 'id_usuario');
     }
 
-    public function avaliacoesRecebidas()
-    {
-        return $this->hasMany(Avaliacao::class, 'id_prestador', 'id_usuario');
-    }
-    
-    public function metricas()
-    {
-        return $this->hasMany(Metrica::class, 'id_usuario', 'id_usuario');
-    }
-    
-    public function curriculo()
-    {
-        return $this->hasOne(Curriculo::class, 'id_candidato', 'id_usuario');
-    }
-    
     public function admins()
     {
         return $this->hasOne(Admin::class, 'id_usuario', 'id_usuario');
     }
 }
+//ajustes aqui

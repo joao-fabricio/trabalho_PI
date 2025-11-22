@@ -14,7 +14,7 @@ class CandidatoController extends Controller
      */
     public function index()
     {
-        $candidatos = Candidato::where('id_usuario')->get();
+        $candidatos = Candidato::with('id_usuario')->get();
         
         return view('candidatos.index', compact('candidatos'));
     }
@@ -33,6 +33,11 @@ class CandidatoController extends Controller
      */
     public function create()
     {
+        //Impedir que usuário crie mais de um perfil de candidato
+        if (Candidato::where('id_usuario', Auth::id())->exists()) {
+            return redirect()->route('candidatos.meuPerfil')
+                ->with('error', 'Você já possui um perfil de candidato.');
+        }
         return view('candidatos.create');
     }
 
@@ -41,12 +46,20 @@ class CandidatoController extends Controller
      */
     public function store(Request $request)
     {
+
+        //Dupla segurança para impedir múltiplos perfis
+        if (Candidato::where('id_usuario', Auth::id())->exists()) {
+            return redirect()->route('candidatos.meuPerfil')
+                ->with('error', 'Você já possui um perfil de candidato.');
+        }
+
         $request->validate([
             'habilidades' => 'nullable|string',
             'experiencia' => 'nullable|string',
             'cidade' => 'nullable|string|max:150',
             'estado' => 'nullable|string|max:2',
         ]);
+
         Candidato::create([
             'id_usuario' => Auth::id(),
             'habilidades' => $request->habilidades,
@@ -64,7 +77,7 @@ class CandidatoController extends Controller
      */
     public function show($id)
     {
-        $candidato = Candidato::whith(['usuario', 'curriculo'])->findOrFail($id);
+        $candidato = Candidato::with(['usuario', 'curriculo'])->findOrFail($id);
         return view('candidatos.show', compact('candidato'));
     }
 
@@ -93,7 +106,7 @@ class CandidatoController extends Controller
             abort(403, 'Acesso não autorizado.');
         }
 
-        request()->validate([
+        $request()->validate([
             'habilidades' => 'nullable|string',
             'experiencia' => 'nullable|string',
             'cidade' => 'nullable|string|max:150',
