@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Auth;
 class VagaController extends Controller
 {
     /**
-     * Listar todas as vagas para os usuários.
+     * Listar vagas públicas.
      */
-    public function index()
+    public function indexAll()
     {
         $vagas = Vaga::with('empresa')
             ->where('status', 'aberta')
@@ -20,6 +20,18 @@ class VagaController extends Controller
             ->get();
             //confirmar se é aberta msm
         return view('vagas.index', compact('vagas'));    
+    }
+
+    // Listar vagas da empresa logada
+    public function index()
+    {
+        $empresa = Empresa::where('id_usuario', Auth::id())->firstOrFail();
+
+        $vagas = Vaga::where('id_empresa', $empresa->id_empresa)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('vagas.minhas', compact('vagas'));    
     }
 
     /**
@@ -48,7 +60,7 @@ class VagaController extends Controller
         ]);
 
         Vaga::create([
-            'id_empresa' => $empresa->id,
+            'id_empresa' => $empresa->id_empresa,
             'titulo' => $request->titulo,
             'descricao' => $request->descricao,
             'requisitos' => $request->requisitos,
@@ -79,7 +91,7 @@ class VagaController extends Controller
     {
         $empresa = Empresa::where('id_usuario', Auth::id())->firstOrFail();
 
-        $vaga = Vaga::where('id_empresa', $empresa->id)
+        $vaga = Vaga::where('id_empresa', $empresa->id_empresa)
             ->findOrFail($id_vaga);
 
         return view('vagas.edit', compact('vaga'));    
@@ -92,7 +104,7 @@ class VagaController extends Controller
     {
         $empresa = Empresa::where('id_usuario', Auth::id())->firstOrFail();
 
-        $vaga = Vaga::where('id_empresa', $empresa->id)
+        $vaga = Vaga::where('id_empresa', $empresa->id_empresa)
             ->findOrFail($id_vaga);
 
         $request->validate([
@@ -104,9 +116,19 @@ class VagaController extends Controller
             'status' => 'required|in:aberta,fechada',
         ]);    
 
+        //atualiza
+        $vaga->update([
+            'titulo' => $request->titulo,
+            'descricao' => $request->descricao,
+            'requisitos' => $request->requisitos,
+            'salario' => $request->salario,
+            'localidade' => $request->localidade,
+            'status' => $request->status,
+        ]);
+
         //estudar esse in:aberta,fechada
 
-        $vaga->update($request->all());
+        //remoção do request que tinha aqui
 
         return redirect()->route('vagas.minhas')
             ->with('success', 'Vaga atualizada com sucesso.');
@@ -119,7 +141,7 @@ class VagaController extends Controller
     {
         $empresa = Empresa::where('id_usuario', Auth::id())->firstOrFail();
 
-        $vaga = Vaga::where('id_empresa', $empresa->id)
+        $vaga = Vaga::where('id_empresa', $empresa->id_empresa)
             ->findOrFail($id_vaga);
 
         $vaga->delete();
@@ -128,3 +150,5 @@ class VagaController extends Controller
             ->with('success', 'Vaga excluída com sucesso.');
     }
 }
+
+//ajustar controller geral

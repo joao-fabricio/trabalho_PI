@@ -2,9 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CandidatoController;
+use App\Http\Controllers\CandidaturaController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\PrestadorController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ServicoController;
+use App\Http\Controllers\VagaController;
+use App\Models\Candidato;
+use App\Models\Candidatura;
 use App\Models\Prestador;
 use Termwind\Components\Raw;
 
@@ -101,5 +107,126 @@ Route::middleware('auth')->group(function(){
 
 // ROTAS DE CANDIDATO
 Route::prefix('candidatos')->middleware('auth')->name('candidatos.')->group(function(){
+
+    // Lista todos os candidatos
+    Route::get('/candidatos', [CandidatoController::class, 'index'])->name('candidatos.index');
+
+    // Exibir meu perfil de candidato
+    Route::get('/candidato/meu-perfil', [CandidatoController::class, 'meusDados'])->name('candidatos.meuPerfil');
+
+    // Formulário de criação de candidato
+    Route::get('/candidato/create', [CandidatoController::class, 'create'])->name('candidatos.create');
+
+    // Salvar novo candidato
+    Route::post('/candidato', [CandidatoController::class, 'store'])->name('candidatos.store');
+
+    // Mostrar perfil de um candidato específico
+    Route::get('/candidato/{id}', [CandidatoController::class, 'show'])->name('candidatos.show');
+
+    // Formulário de edição (somente no próprio perfil, mas admin pode editar)
+    Route::get('/candidato/{id}/edit', [CandidatoController::class, 'edit'])->name('candidatos.edit');
+    
+    // Atualizar perfil
+    Route::put('/candidato/{id_candidato}', [CandidatoController::class, 'update'])->name('candidatos.update');
+
+    // Excluir perfil de candidato
+    Route::delete('/candidato/{id_candidato}', [CandidatoController::class, 'destroy'])->name('candidatos.destroy');
+});
+
+// ROTAS DE VAGAS
+//rotas públicas
+Route::get('/vagas', [VagaController::class, 'index'])->name('vagas.index');
+
+Route::get('/vagas/{id_vaga}', [VagaController::class, 'show'])->name('vagas.show');
+
+//rotas privadas pra empresa logada
+Route::middleware(['auth'])->group(function(){
+    
+    //Listar vagas da empresa logada
+    Route::get('/empresa/vagas', [VagaController::class, 'index'])->name('vagas,minhas');
+
+    //Formulário de criar vaga
+    Route::get('/empresa/vagas/criar', [VagaController::class, 'create'])->name('vagas.create');
+
+    //Salvar vaga
+    Route::post('/empresa/vagas', [VagaController::class, 'store'])->name('vagas.store');
+
+    //Fprmulário de editar vaga
+    Route::get('/empresa/vagas/{id_vaga}/editar', [VagaController::class, 'edit'])->name('vagas.edit');
+
+    //Atualizar vaga
+    Route::put('/empresa/vagas/{id_vaga}', [VagaController::class, 'update'])->name('vagas.edit');
+
+    //Deletar vaga
+    Route::delete('/empresa/vagas/{id_vaga}', [VagaController::class, 'destroy'])->name('vagas.destroy');
+});
+
+
+// ROTAS DE SERVIÇOS
+Route::get('/servicos', [ServicoController::class, 'indexAll'])->name('servicos.listar');
+
+Route::middleware(['auth', 'prestador'])->group(function(){
+
+    // Lista serviços do prestador logado
+    Route::get('/meus-servicos', [ServicoController::class, 'index'])->name('servicos.create');
+
+    // Criar serviço
+    Route::get('/servicos/create', [ServicoController::class, 'create'])->name('servicos.create');
+
+    Route::post('/servivos', [ServicoController::class, 'store'])->name('servico.store');
+
+    // Editar serviço
+    Route::get('/servicos/{id_servico}/edit', [ServicoController::class, 'edit'])->name('servico.edit');
+
+    // Atualizar serviço
+    Route::put('/servicos/{id_servico}', [ServicoController::class, 'update'])->name('servicos.update');
+
+    //Excluir serviço
+    Route::delete('/servicos/{id_servico}', [ServicoController::class, 'destroy'])->name('servicos.destroy');
+
+    // se ligar em fazer os middleware restantes se der tempo
+});
+// ROTAS DE CANDIDATURAS
+Route::middleware(['auth'])->group(function(){
+
+    //Candidatos se innscrevem na vaga
+    Route::post('/vagas/{id}/candidatar', [CandidaturaController::class, 'candidatar'])->name('candidaturas.candidatar');
+
+    //ver minhas candidaturas
+    Route::get('/minhas-candidaturas', [CandidaturaController::class, 'minhas'])->name('candidaturas.minhas');
+
+    //cancelar candidatura
+    Route::delete('/candidaturas/{id}', [CandidaturaController::class, 'cancelar'])->name('candidaturas.cancelar');
+});
+
+// Apenas empresa pode gerenciar candidaturas   (middleware diferente)
+
+Route::middleware(['auth'])->group(function(){
+    //ver candidaturas de uma vaga
+    Route::get('/vagas/{id}/candidaturas', [CandidaturaController::class, 'listarPorVaga'])->name('canmdidaturas.porVagas');
+    
+    //aceitar candidatura
+    Route::put('/candidatura/{id}/aceitar', [CandidaturaController::class, 'aceitar'])->name('candidaturas.aceitar');
+
+    //rejeitar candidatura
+    Route::put('candidatura/{id}/rejeitar', [CandidaturaController::class, 'rejeitar'])->name('candidaturas.rejeitar');
+});
+// ROTAS DE AGENDAMENTOS
+
+Route::middleware(['auth'])->group(function(){
+
+});
+// ROTAS DE CURRÍCULOS
+
+Route::middleware(['auth'])->group(function(){
+
+});
+// ROTAS DE AVALIAÇÕES
+
+Route::middleware(['auth'])->group(function(){
+
+});
+// ROTAS DE ADMIN (AINDA EM AJUSTES)
+Route::middleware(['auth'])->group(function(){
 
 });

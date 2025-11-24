@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidatura;
+use App\Models\Vaga;
+use App\Models\Empresa;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
 
 class CandidaturaController extends Controller
 {
@@ -12,10 +16,45 @@ class CandidaturaController extends Controller
      */
     public function index()
     {
+
+
         $candidaturas = Candidatura::with(['candidato', 'vaga'])->get();
 
         return response()->json($candidaturas, 200);
     }
+    //candidaturas da empresa logada
+
+    public function minhas()
+        {
+        $candidato = Auth::user()->candidato;
+
+        if (!$candidato){
+            abort(403, 'Somente candidatos podem acessar');
+        }
+        $candidaturas = Candidatura::with('vaga')
+            ->where('id_candidato', $candidato->id_candidato)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('candidaturas.minhas', compact('candidaturas'));
+    }
+
+    //candidaturas recebidas pela empresa do usuário logado
+    public function recebidas()
+    {
+        $empresa = Empresa::where('id_usuario', Auth::id())->firstOrFail();
+
+        // vagas dessa empresa
+        $candidaturas = Candidatura::with(['candidato', 'vaga'])
+            ->whereHas('vaga', function ($q) use ($empresa) {
+                $q->where('id_empresa', $empresa->id_empresa);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('candidaturas.recebidas', compact('candidaturas'));        
+    }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -28,34 +67,39 @@ class CandidaturaController extends Controller
     /**
      * Criar nova candidatura.
      */
-    public function store(Request $request)
+    public function store(Request $request, $id_vaga)
     {
+        $candidato = Auth::user()->candidato;
+
+        if (!$candidato){
+            abort(403, 'Somente candidatos podem se candidatar');
+        }
+        
+        //garantir se existe a vaga
+        $vaga = Vaga::findOrFail($id_vaga);
+
+        /*
         $validated = $request->validate([
-            'id_candidato' => 'required|exists:candidatos,id_candidato',
             'id_vaga' => 'required|exists:vagas,id_vaga',
         ]);
+        **/
 
         // verificar se o candidato já se candidatou à vaga
         $jaExiste = Candidatura::where('id_candidato', $request->id_candidato)
-            ->where('id_vaga', $request->id_vaga)
+            ->where('id_vaga', $id_vaga)
             ->first();
 
         if ($jaExiste) {
-            return response()->json([
-                'message' => 'Candidato já se candidatou a esta vaga.'
-            ], 409);
+            return back()->with('error', 'Você já se candidatou para esta vaga.');
         }    
 
-        $candidatura = Candidatura::create([
-            'id_candidato' => $request->id_candidato,
+        Candidatura::create([
+            'id_candidato' => $candidato->id_candidato,
             'id_vaga' => $request->id_vaga,
             'status' => 'pendente',
         ]);
 
-        return response()->json([
-            'message' => 'Candidatura enviada com sucesso',
-            'candidatura' => $candidatura
-        ], 201);
+        return back()->with('sucess', 'Candidatura enviada com sucesso.');
     }
 
     /**
@@ -81,20 +125,23 @@ class CandidaturaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'status' => 'required|in:pendente,aceito,rejeitado',
+        $request->validate([
+            'status' => 'required|in:pendente,aceita,rejeitada',
         ]);
 
-        $candidatura = Candidatura::findOrFail($id);
+        $empresa = Empresa::where('id_usuario', Auth::id())->firstOrFail();
 
+        $candidatura = Candidatura::with('vaga')->findOrFail($id);
+
+        // empresa so muda candidatura de suas vagas
+        if($candidatura->vaga->id_empresa != $empresa->id_empresa) {
+            abort(403, 'Você não pode alterar essa candidatura');
+        }
         $candidatura->update([
-            'status' => $request['status']
+            'status' => $request->status,
         ]);
 
-        return response()->json([
-            'message' => 'Status da candidatura atualizada com sucesso',
-            'candidatura' => $candidatura
-        ], 200);
+        return back()->with('sucess', 'Status atualizado com sucesso.');
     }
 
     /**
@@ -102,7 +149,19 @@ class CandidaturaController extends Controller
      */
     public function destroy($id)
     {
-        $candidatura = Candidatura::findOrFail($id);
+        $candidatura = Candidatura::with('vaga')->findOrFail($id);
+        $user = Auth::user();
+
+        //estudar aqui pra baixo
+
+        $isCandidato = $user->candidato && $user->candidato->id_candidato == $candidatura->id_candidato;
+
+        $empresa = Empresa::where('id_usuario', Auth::id())->first();
+        $isEmpresa = $empresa && $candidatura->vaga->id_empresa == $empresa->id_empresa;
+
+        if (!$isCandidato && !$isEmpresa) {
+            abort(403, 'Você não tem permissão para apagar esta candidatura.');
+        }
 
         $candidatura->delete();
 

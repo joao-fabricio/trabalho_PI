@@ -26,11 +26,13 @@ class Agendamento extends Model
         return $this->belongsTo(Usuario::class, 'id_usuario', 'id_usuario');
     }
 
+    /*
     public function prestador()
     {
         return $this->servico->prestador();
     }
-
+    */
+        
     public function servico()
     {
         return $this->belongsTo(Servico::class, 'id_servico', 'id_servico');

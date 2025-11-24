@@ -49,7 +49,13 @@ class AgendamentoController extends Controller
             'observacoes' => 'nullable|string|max:500',
         ]);
 
-        Agendamento::created([
+        $existe = Agendamento::where('id_usuario', Auth::id())->where('id_servico', $request->id_servico)->where('data_agendada', $request->data_agendada)->first();
+
+        if ($existe) {
+            return back()->with('error', 'Você já possui um agendamento para este serviço nessa data.');
+        }
+
+        Agendamento::create([
             'id_usuario' => Auth::id(),
             'id_servico' => $request->id_servico,
             'data_agendada' => $request->data_agendada,
@@ -76,7 +82,7 @@ class AgendamentoController extends Controller
         $agendamento = Agendamento::findOrFail($id);
 
         if ($agendamento->id_usuario !== Auth::id()){
-            abort(403);
+            abort(403, 'Você não tem permissão para editar esse agendamento.');
         }
 
         if ($agendamento->status !== 'pendente') {
@@ -119,24 +125,47 @@ class AgendamentoController extends Controller
     {
         $agendamento = Agendamento::findOrFail($id);
 
-        // Tem que garantir se o prestador é o dono do agendamento
-        if ($agendamento->servico->id_prestador !== Auth::user()->prestador->id_prestador) {
-            abort(403, 'Acesso negado.');
+        if (Auth::user()->tipo !=='prestador') {
+            abort(403, 'Apenas prestadores podem confirmar agendamentos,');
         }
 
+        // Tem que garantir se o prestador é o dono do agendamento
+        if (!Auth::user()->tipo !== 'prestador') {
+            abort(403, 'Apenas prestadores podem confirmar agendamentos.');
+        }
+
+        if ($agendamento->servico->id_prestador !== Auth::user()->prestador->id_prestador) {
+            abort(403, 'Você não tem permissão para confirmar este agendamento.');
+        }        
+
         $agendamento->status = 'confirmada';
-        $agendamento->save();
 
         return redirect()->back()->with('success', 'Agendamento confirmado com sucesso.');
     }
 
     public function cancelar($id)
     {
-        $agendamento = Agendamento::dindOrail($id);
+        $agendamento = Agendamento::findOrFail($id);
+
         $user = Auth::user();
 
         $isCliente = $agendamento->id_usuario == $user->id_usuario;
         $isPrestadorDono = $user->tipo === 'prestador' && $agendamento->servico->id_prestador == $user->prestador->id_prestador;
+
+        //validação amplificada caso prestador null
+        if ($user->tipo === 'prestador' && !$user->prestador) {
+            abort(403, 'Seu usuário não possui um perfil de prestador configurado.');
+        }
+
+        //apenas cliente ou prestador podem cancelar
+        if(!$isCliente && !$isPrestadorDono) {
+            abort(403, 'Acesso negado.');
+        }
+        //estudar mais if e else
+
+        $agendamento->update(['status' => 'cancelada']);
+
+        return back()->with('sucess', 'Agendamento cancelado com sucesso.');
     }
 
     /**
@@ -144,23 +173,17 @@ class AgendamentoController extends Controller
      */
     public function destroy($id)
     {
-        $agendamento = Agendamento::find0rFail($id);
+        $agendamento = Agendamento::findOrFail($id);
 
         if ($agendamento->id_usuario !== Auth::id()) {
-            abort(403);
+            abort(403, 'Você não tem permissão para excluir esse agendamento.');
         }
 
         $agendamento->delete();
 
-        return redirect()->route('agendamentos.index')->with('success', 'Agendamento cancelado com sucesso.');
-
-        if (!$isCliente && !$isPrestadorDono) {
-            abort(403, 'Acesso negado.');
-        }
-
-        $agendamento->status = 'cancelada';
+       /* $agendamento->status = 'cancelada';
         $agendamento->save();
-
-        return redirect()->back()->with('success', 'Agendamento cancelado com sucesso.');
+        */
+        return redirect()->route('agendamentos.index')->with('success', 'Agendamento cancelado com sucesso.');
     }
 }
